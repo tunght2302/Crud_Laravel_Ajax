@@ -43,7 +43,7 @@
                                 icon: 'success',
                             }).then(() => {
                                 // Xoá thông tin trong form sau khi thêm mới
-                                $('.clearable').val('');
+                                // $('.clearable').val('');
                                 $('#errorDiv').hide(); // ẩn thông báo lỗi
                             });
                         }
