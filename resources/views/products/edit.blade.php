@@ -34,7 +34,7 @@
             $('#saveBtn').on('click', function() {
                 var formData = new FormData($('#ajaxForm')[0]);
 
-                sendAjaxRequest('/update/{{ $one_product->id }}', formData,
+                sendAjaxRequest('/update/{{ $one_product->id }}','POST', formData,
                     function(response) {
                         if (response.success) {
                             Swal.fire({
