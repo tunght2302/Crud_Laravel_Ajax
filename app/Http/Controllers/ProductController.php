@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProductRequest;
 use App\Models\Products;
 use App\Models\Categories;
 use Illuminate\Http\Request;
@@ -14,45 +15,22 @@ class ProductController extends Controller
         $list_products = Products::all();
         return view('products.list', compact('list_products'));
     }
-    
+
     public function view_add()
     {
-        $category = Categories::all();
-        return view('products.add', compact('category'));
+        return view('products.add');
     }
 
-    public function add(REQUEST $request)
+    public function add(ProductRequest $request)
     {
-        $rules = [
-            'name' => 'required | regex:/^[\pL\pM\s]+$/u | min:2 | max:255',
-            'quantity' => 'required | numeric ',
-            'price' => 'required | numeric',
-            'image' => 'image',
-            'category' => 'required',
-        ];
-        $message = [
-            'required' => 'Không được bỏ trống',
-            'regex' => 'Không được nhập số',
-            'min' => 'Không được nhỏ hơn 10 ký tự',
-            'max' => 'Không được lớn hơn 255 ký tự',
-            'numeric' => 'Không được nhập chữ',
-            'image' => 'Ảnh không hợp lệ',
-        ];
-        $request->validate($rules, $message);
         $product = new Products();
 
-        $product->name = $request->name;
-        $product->price = $request->price;
-        $product->category_id = $request->category;
-        $product->quantity = $request->quantity;
+        $product->fill($request->all());
 
-        $image = $request->image;
-        if ($image) {
-            $imagename = time() . '.' . $image->getClientOriginalExtension();
-            $request->image->move('upload', $imagename);
-
-            $product->image = $imagename;
+        if ($request->hasFile('image')) {
+            $product->image = upload_file('uploads', $request->file('image'));
         }
+
         $product->save();
 
         return response()->json(['success' => 'Product created successfully']);
@@ -62,35 +40,23 @@ class ProductController extends Controller
     {
         $one_product = Products::find($id);
 
-        $category_name = DB::table('products')
-            ->join('categories', 'products.category_id', '=', 'categories.id')
-            ->select('products.*', 'categories.name as category_name')
-            ->where('products.id', $id)
-            ->first();
-
-        $all_cate = Categories::all();
-        return view('products.edit', compact('one_product', 'category_name', 'all_cate'));
+        return view('products.edit', compact('one_product'));
     }
 
-    public function update(Request $request, $id)
+    public function update(ProductRequest $request, $id)
     {
-        $oneproduct = Products::find($id);
+        $product = Products::query()->findOrFail($id);
 
-        $oneproduct->name = $request->name;
-        $oneproduct->price = $request->price;
-        $oneproduct->quantity = $request->quantity;
-        $oneproduct->category_id = $request->category;
+        $product->fill($request->all());
 
-        $image = $request->image;
+        $imgOld = $product->image;
 
-        if ($image) {
-            $imagename = time() . '.' . $image->getClientOriginalExtension();
-            $request->image->move('upload', $imagename);
-
-            $oneproduct->image = $imagename;
+        if ($request->hasFile('image')) {
+            $product->image = upload_file('uploads', $request->file('image'));
+            delete_file($imgOld);
         }
 
-        $oneproduct->save();
+        $product->save();
 
         return response()->json(['success' => 'Product updated successfully']);
     }

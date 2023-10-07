@@ -18,8 +18,6 @@ return new class extends Migration
             $table->string('name');
             $table->string('price');
             $table->string('image')->nullable();
-            $table->string('quantity');
-            $table->integer('category_id')->nullable();
             $table->timestamps();
         });
     }
